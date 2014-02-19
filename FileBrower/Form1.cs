@@ -84,14 +84,7 @@ namespace FileBrower
                 Console.WriteLine(index);
                 String name = ((ItemData)listBox1.Items[index]).Name;
                 String filePath = path + "\\" + name;
-                if (index == 0 && paths.Count > 0)
-                {
-                    UP();
-                }
-                else
-                {
-                    OpenSelectItem();
-                }
+                OpenSelectItem();
             }
         }
 
@@ -109,34 +102,36 @@ namespace FileBrower
         {
             if (listBox1.SelectedIndex != -1)
             {
-                // ignore up
                 if (listBox1.SelectedIndex == 0 && paths.Count > 0)
                 {
-                    return;
-                }
-                string name = ((ItemData)listBox1.SelectedItem).Name;
-                string filePath = path + "\\" + name;
-                if ((File.GetAttributes(filePath) & FileAttributes.Directory) == FileAttributes.Directory)
-                {
-                    Console.WriteLine("open dir " + filePath);
-                    paths.Push(name);
-                    string tpath = path;
-                    path = filePath;
-                    try
-                    {
-                        LoadFiles();
-                    }
-                    catch (UnauthorizedAccessException uae)
-                    {
-                        path = tpath;
-                        paths.Pop();
-                        Console.WriteLine(uae.ToString());
-                        MessageBox.Show("Unauthorized Access");
-                    }
+                    UP();
                 }
                 else
                 {
-                    System.Diagnostics.Process.Start(filePath);
+                    string name = ((ItemData)listBox1.SelectedItem).Name;
+                    string filePath = path + "\\" + name;
+                    if ((File.GetAttributes(filePath) & FileAttributes.Directory) == FileAttributes.Directory)
+                    {
+                        Console.WriteLine("open dir " + filePath);
+                        paths.Push(name);
+                        string tpath = path;
+                        path = filePath;
+                        try
+                        {
+                            LoadFiles();
+                        }
+                        catch (UnauthorizedAccessException uae)
+                        {
+                            path = tpath;
+                            paths.Pop();
+                            Console.WriteLine(uae.ToString());
+                            MessageBox.Show("Unauthorized Access");
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Process.Start(filePath);
+                    }
                 }
             }
  
