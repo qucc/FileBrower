@@ -72,7 +72,6 @@ namespace FileBrower
             SizeF hT = TextRenderer.MeasureText(name, e.Font);
             e.Graphics.DrawString(name,e.Font,Brushes.Black,new PointF(leftMargin + image.Width + 5, e.Bounds.Y + (e.Bounds.Height - hT.Height)/2));
             // If the ListBox has focus, draw a focus rectangle around the selected item.
-            e.DrawFocusRectangle();
             
         }
 
@@ -86,11 +85,32 @@ namespace FileBrower
                 String filePath = path + "\\" + name;
                 if (index == 0 && paths.Count > 0)
                 {
-                    string sname = paths.Pop();
-                    path = path.Substring(0,path.LastIndexOf("\\"));
-                    LoadFiles();
+                    UP();
                 }
-                else if ((File.GetAttributes(filePath) & FileAttributes.Directory) == FileAttributes.Directory)
+                else
+                {
+                    OpenSelectItem();
+                }
+            }
+        }
+
+        private void UP()
+        {
+            if (paths.Count > 0)
+            {
+                string sname = paths.Pop();
+                path = path.Substring(0, path.LastIndexOf("\\"));
+                LoadFiles();
+            }
+        }
+
+        private void OpenSelectItem()
+        {
+            if (listBox1.SelectedIndex != -1)
+            {
+                string name = ((ItemData)listBox1.SelectedItem).Name;
+                string filePath = path + "\\" + name;
+                if ((File.GetAttributes(filePath) & FileAttributes.Directory) == FileAttributes.Directory)
                 {
                     Console.WriteLine("open dir " + filePath);
                     paths.Push(name);
@@ -113,10 +133,6 @@ namespace FileBrower
                     System.Diagnostics.Process.Start(filePath);
                 }
             }
-        }
-
-        private void OpenSelectItem()
-        {
  
         }
 
@@ -125,30 +141,10 @@ namespace FileBrower
             switch (e.KeyData)
             {
                 case Keys.Back:
+                    UP();
                     break;
                 case Keys.Enter:
-                    if (listBox1.SelectedIndex != -1)
-                    {
-                        string name = ((ItemData)listBox1.SelectedItem).Name;
-                        string filepath = path + "\\" + name;
-                        Console.WriteLine("press enter then open dir " + filepath);
-                        paths.Push(name);
-                        string tpath = path;
-                        path = filepath;
-                        try
-                        {
-                            LoadFiles();
-                        }
-                        catch (UnauthorizedAccessException uae)
-                        {
-                            path = tpath;
-                            paths.Pop();
-                            Console.WriteLine(uae.ToString());
-                            MessageBox.Show("Unauthorized Access");
-                        }
- 
-                    }
-                   
+                    OpenSelectItem();
                     break;
 
             }
