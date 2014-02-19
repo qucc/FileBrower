@@ -28,7 +28,7 @@ namespace FileBrower
         private void LoadFiles()
         {
 
-            string[] extensions = { ".pdf", ".doc" };
+            string[] extensions = { ".pdf", ".doc" ,".txt"};
             List<string> subDirectories = new List<string>(Directory.EnumerateDirectories(path));
             List<string> subFiles = new List<string>(Directory.EnumerateFiles(path).Where(s => extensions.Any(ext => ext == Path.GetExtension(s))));
             List<ItemData> all = new List<ItemData>();
@@ -36,6 +36,7 @@ namespace FileBrower
             {
                 ItemData item = new ItemData();
                 item.Name = Path.GetFileName(directoryPath);
+                item.Direcory = true;
                 item.Icon = (Image)rm.GetObject("directory");
                 all.Add(item);
             }
@@ -51,6 +52,7 @@ namespace FileBrower
                 ItemData item = new ItemData();
                 item.Name = "UP";
                 item.Icon = (Image)rm.GetObject("up");
+                item.Direcory = true;
                 all.Insert(0, item);
             }
             listBox1.Items.Clear();
@@ -60,7 +62,6 @@ namespace FileBrower
 
         private void listBox1_DrawItem(object sender, DrawItemEventArgs e)
         {
-
             e.DrawBackground();
             // Draw the current item text based on the current Font 
             // and the custom brush settings.
@@ -69,22 +70,42 @@ namespace FileBrower
             Image image = data.Icon;
 
             int leftMargin = 10;
+            int rightMargin =10;
             e.Graphics.DrawImage(image,new Point(leftMargin,e.Bounds.Y + (e.Bounds.Height - image.Height)/2));
             SizeF hT = TextRenderer.MeasureText(name, e.Font);
             e.Graphics.DrawString(name,e.Font,Brushes.Black,new PointF(leftMargin + image.Width + 5, e.Bounds.Y + (e.Bounds.Height - hT.Height)/2));
-            // If the ListBox has focus, draw a focus rectangle around the selected item.
-            
+            if (!data.Direcory)
+            {
+                Pen skyBluePen = new Pen(Brushes.DeepSkyBlue);
+                int buttonWidth = 50;
+                int buttonHeight = 30;
+
+                Rectangle deleteButtonBounds = new Rectangle(e.Bounds.Width - buttonWidth - rightMargin, e.Bounds.Y + (e.Bounds.Height - buttonHeight) / 2, buttonWidth, buttonHeight);
+                if (deleteButtonBounds.Contains(mouseDownPoint))
+                {
+                    e.Graphics.FillRectangle(Brushes.Chocolate, deleteButtonBounds);
+                    deleteClicked = true;
+                }
+                else
+                {
+                    e.Graphics.DrawRectangle(new Pen(Brushes.Chocolate), deleteButtonBounds);
+                }
+
+                string deleteString = rm.GetString("delete");
+                hT = TextRenderer.MeasureText(deleteString, e.Font);
+                e.Graphics.DrawString(deleteString, e.Font, Brushes.Black, new PointF(e.Bounds.Width - buttonWidth - rightMargin + (buttonWidth - hT.Width) / 2, e.Bounds.Y + (e.Bounds.Height - hT.Height) / 2));
+            }
         }
 
         private void listBox1_MouseClick(object sender, MouseEventArgs e)
         {
+            Console.WriteLine(mouseDownPoint);
+
             int index = this.listBox1.IndexFromPoint(e.Location);
-            if (index != System.Windows.Forms.ListBox.NoMatches)
+            if (index >= 0)
             {
                 Console.WriteLine(index);
-                String name = ((ItemData)listBox1.Items[index]).Name;
-                String filePath = path + "\\" + name;
-                OpenSelectItem();
+
             }
         }
 
@@ -149,6 +170,52 @@ namespace FileBrower
                     break;
 
             }
+        }
+
+        private Point mouseDownPoint = Point.Empty;
+        private bool deleteClicked = false;
+        private void listBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            mouseDownPoint = e.Location;
+            int index = listBox1.IndexFromPoint(e.Location);
+            if (index >= 0)
+            {
+                listBox1.Invalidate(listBox1.GetItemRectangle(index));
+            }
+            
+        }
+
+        private void listBox1_MouseUp(object sender, MouseEventArgs e)
+        {
+            mouseDownPoint = Point.Empty;
+            int index = listBox1.IndexFromPoint(e.Location);
+            if (index >= 0)
+            {
+                listBox1.Invalidate(listBox1.GetItemRectangle(index));
+                if (!deleteClicked)
+                {
+                    OpenSelectItem();
+                }
+                else
+                {
+                    String name = ((ItemData)listBox1.Items[index]).Name;
+                    String filePath = path + "\\" + name;
+                    try
+                    {
+                        File.Delete(filePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                        MessageBox.Show(ex.ToString());
+                    }
+                    finally
+                    {
+                        LoadFiles();
+                    }
+                }
+                deleteClicked = false;
+            }
         }   
     }
 
@@ -156,6 +223,13 @@ namespace FileBrower
     {
          string name;
          Image icon;
+         bool direcory;
+
+         public bool Direcory
+         {
+             get { return direcory; }
+             set { direcory = value; }
+         }
         public string Name
         {
             set { name = value; }
@@ -167,5 +241,7 @@ namespace FileBrower
             set { icon = value; }
             get {return icon;}
         }
+
+
     }
 }
