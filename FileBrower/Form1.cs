@@ -27,9 +27,10 @@ namespace FileBrower
 
         private void LoadFiles()
         {
-    
+
+            string[] extensions = { ".pdf", ".doc" };
             List<string> subDirectories = new List<string>(Directory.EnumerateDirectories(path));
-            List<string> subFiles = new List<string>(Directory.EnumerateFiles(path));
+            List<string> subFiles = new List<string>(Directory.EnumerateFiles(path).Where(s => extensions.Any(ext => ext == Path.GetExtension(s))));
             List<ItemData> all = new List<ItemData>();
             foreach (string directoryPath in subDirectories)
             {
@@ -108,6 +109,11 @@ namespace FileBrower
         {
             if (listBox1.SelectedIndex != -1)
             {
+                // ignore up
+                if (listBox1.SelectedIndex == 0 && paths.Count > 0)
+                {
+                    return;
+                }
                 string name = ((ItemData)listBox1.SelectedItem).Name;
                 string filePath = path + "\\" + name;
                 if ((File.GetAttributes(filePath) & FileAttributes.Directory) == FileAttributes.Directory)
