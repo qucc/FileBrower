@@ -15,6 +15,7 @@ namespace FileBrower
     public partial class FileBrower : Form
     {
         string path = "E:/";
+        FileSystemWatcher watcher = new FileSystemWatcher();
         Stack<string> paths = new Stack<string>();
 
         ResourceManager rm = new ResourceManager("FileBrower.Resource", typeof(FileBrower).Assembly);
@@ -22,7 +23,20 @@ namespace FileBrower
         public FileBrower()
         {    
             InitializeComponent();
+            initWatcher();
             LoadFiles();
+        }
+
+        private void initWatcher()
+        {
+            // Add event handlers.
+            watcher.Changed += new FileSystemEventHandler(OnChanged);
+            watcher.Created += new FileSystemEventHandler(OnChanged);
+            watcher.Deleted += new FileSystemEventHandler(OnChanged);
+            watcher.Renamed += new RenamedEventHandler(OnRenamed);
+            watcher.Path = path;
+            // Begin watching.
+            watcher.EnableRaisingEvents = true;
         }
 
         private void LoadFiles()
@@ -55,8 +69,21 @@ namespace FileBrower
                 item.Direcory = true;
                 all.Insert(0, item);
             }
-            listBox1.Items.Clear();
-            listBox1.Items.AddRange(all.ToArray());
+            if (listBox1.InvokeRequired)
+            {
+                Action a = () => {
+                    listBox1.Items.Clear();
+                    listBox1.Items.AddRange(all.ToArray());
+                };
+                listBox1.Invoke(a);
+
+            }
+            else
+            {
+                listBox1.Items.Clear();
+                listBox1.Items.AddRange(all.ToArray());
+            }
+            watcher.Path = path;
         }
 
 
@@ -226,6 +253,22 @@ namespace FileBrower
                 deleteClicked = false;
             }
         }   
+
+        // Define the event handlers.
+        private  void OnChanged(object source, FileSystemEventArgs e)
+        {
+            // Specify what is done when a file is changed, created, or deleted.
+            Console.WriteLine("File: " + e.FullPath + " " + e.ChangeType);
+            LoadFiles();
+        }
+
+        private  void OnRenamed(object source, RenamedEventArgs e)
+        {
+            // Specify what is done when a file is renamed.
+            Console.WriteLine("File: {0} renamed to {1}", e.OldFullPath, e.FullPath);
+            LoadFiles();
+        }
+
     }
 
     class ItemData 
