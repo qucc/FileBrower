@@ -198,21 +198,30 @@ namespace FileBrower
                 }
                 else
                 {
-                    String name = ((ItemData)listBox1.Items[index]).Name;
-                    String filePath = path + "\\" + name;
-                    try
+                    DialogResult dialogResult = MessageBox.Show("Sure", "Some Title", MessageBoxButtons.YesNo);
+                    if (dialogResult == DialogResult.Yes)
                     {
-                        File.Delete(filePath);
+                        String name = ((ItemData)listBox1.Items[index]).Name;
+                        String filePath = path + "\\" + name;
+                        try
+                        {
+                            File.Delete(filePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.ToString());
+                            MessageBox.Show(ex.ToString());
+                        }
+                        finally
+                        {
+                            LoadFiles();
+                        }
                     }
-                    catch (Exception ex)
+                    else if (dialogResult == DialogResult.No)
                     {
-                        Console.WriteLine(ex.ToString());
-                        MessageBox.Show(ex.ToString());
+                        //do something else
                     }
-                    finally
-                    {
-                        LoadFiles();
-                    }
+                   
                 }
                 deleteClicked = false;
             }
